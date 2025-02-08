@@ -10,6 +10,9 @@ public class PlayerController : MonoBehaviour
     public float walkSpeed = 5;
     public float runSpeed = 8;
 
+    public float gravity = 9.8f;
+    private Vector3 velocity; // Untuk menyimpan kecepatan jatuh
+
     public KeyCode runKey = KeyCode.LeftShift; // Hotkey untuk lari (bisa diubah di Inspector)
     public Transform gunTransform; // Transform dari posisi tembakan (misalnya dari senjata)
     public GameObject bulletPrefab; // Prefab peluru
@@ -20,30 +23,30 @@ public class PlayerController : MonoBehaviour
         charController = GetComponent<CharacterController>();
     }
 
+
     void Update()
     {
-        // Input untuk bergerak
         Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
-
-        // if (input != Vector3.zero)
-        // {
-        //     targetRotation = Quaternion.LookRotation(input);
-        //     transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-        // }
-
         Vector3 motion = input.normalized;
         motion *= (Mathf.Abs(input.x) == 1 && Mathf.Abs(input.z) == 1) ? 0.7f : 1f;
-
-        // Menggunakan variabel hotkey untuk lari
         motion *= Input.GetKey(runKey) ? runSpeed : walkSpeed;
 
-        charController.Move(motion * Time.deltaTime);
+        // Terapkan gravitasi
+        if (!charController.isGrounded)
+        {
+            velocity.y -= gravity * Time.deltaTime; // Tambahkan efek jatuh
+        }
+        else
+        {
+            velocity.y = -2f; // Pastikan karakter tetap di tanah (bukan 0 agar tidak terdeteksi "melayang")
+        }
 
-        // Rotasi karakter menghadap kursor mouse
+        // Gabungkan gerakan dengan gravitasi
+        charController.Move((motion + velocity) * Time.deltaTime);
+
         RotateTowardsMouse();
 
-        // Tembak peluru saat klik kiri mouse
-        if (Input.GetMouseButtonDown(0)) // 0 berarti klik kiri mouse
+        if (Input.GetMouseButtonDown(0))
         {
             ShootBullet();
         }
