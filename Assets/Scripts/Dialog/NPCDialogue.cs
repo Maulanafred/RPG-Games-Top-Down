@@ -3,40 +3,52 @@ using UnityEngine;
 public class NPCDialogue : MonoBehaviour
 {
     public string[] npcDialog; // Dialog untuk NPC ini
+    private CharacterController characterController; 
+    [SerializeField] private GameObject interactiveUI; // UI "Press F"
     private DialogueManager dialogueManager; // Referensi ke DialogueManager
-    private bool playerInRange = false; // Untuk mendeteksi apakah pemain berada dalam jangkauan
+    private bool playerInRange = false;
+    private bool isInteracting = false;
 
-    // Start is called before the first frame update
     void Start()
     {
-        dialogueManager = FindObjectOfType<DialogueManager>(); // Menemukan DialogueManager yang ada
+        dialogueManager = FindObjectOfType<DialogueManager>();
+        characterController = FindObjectOfType<CharacterController>();
+        interactiveUI.SetActive(false);
     }
 
-    // Fungsi untuk berinteraksi dengan NPC saat pemain memasuki area trigger
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player")) // Pastikan yang masuk adalah pemain
+        if (other.CompareTag("Player"))
         {
-            playerInRange = true; // Pemain berada dalam jangkauan
+            playerInRange = true;
+            interactiveUI.SetActive(true); // Munculkan UI "Press F"
         }
     }
 
-    // Fungsi untuk berhenti berinteraksi saat pemain keluar dari area trigger
     void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player")) // Pastikan yang keluar adalah pemain
+        if (other.CompareTag("Player"))
         {
-            playerInRange = false; // Pemain keluar dari jangkauan
+            playerInRange = false;
+            interactiveUI.SetActive(false); // Sembunyikan UI
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
-        // Jika pemain dalam jangkauan dan menekan tombol interaksi (misal 'E')
-        if (playerInRange && Input.GetKeyDown(KeyCode.F))
-        {
-            dialogueManager.ShowMessage(npcDialog); // Menampilkan dialog
+        if (playerInRange && Input.GetKeyDown(KeyCode.F) && !isInteracting)
+        {   
+            isInteracting = true; // Set status interaksi
+            characterController.enabled = false; // Matikan kontrol pemain
+            interactiveUI.SetActive(false); // Sembunyikan UI "Press F"
+
+            dialogueManager.ShowMessage(npcDialog, EndInteraction); // Panggil dialog dengan callback
         }
+    }
+
+    void EndInteraction()
+    {
+        isInteracting = false;
+        characterController.enabled = true; // Aktifkan kontrol pemain kembali
     }
 }

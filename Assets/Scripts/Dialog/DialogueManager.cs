@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -7,41 +6,46 @@ public class DialogueManager : MonoBehaviour
 {
     public TMP_Text text; // Tempat untuk menampilkan teks dialog
     public GameObject DialogSystem; // Panel dialog yang akan muncul
-    public string[] npcDialog; // Array yang menyimpan dialog untuk setiap NPC
+    private string[] npcDialog; // Array yang menyimpan dialog untuk NPC
     private int currentLine = 0; // Menyimpan baris dialog yang sedang ditampilkan
+    private Action onDialogueEnd; // Callback saat dialog selesai
 
-    // Start is called before the first frame update
     void Start()
     {
-        DialogSystem.SetActive(false); // Menyembunyikan dialog saat game dimulai
+        DialogSystem.SetActive(false); // Sembunyikan dialog saat awal
     }
 
-    // Memulai dialog untuk NPC tertentu
-    public void ShowMessage(string[] message){
-        npcDialog = message; // Mengganti dialog sesuai dengan NPC yang dipilih
-        currentLine = 0; // Mengatur ulang ke baris pertama
-        DialogSystem.SetActive(true); // Menampilkan panel dialog
-        ShowNextLine(); // Menampilkan baris pertama
+    // ✅ Tambahkan parameter kedua untuk callback saat dialog selesai
+    public void ShowMessage(string[] message, Action callback)
+    {
+        if (message == null || message.Length == 0) return; // Cegah error jika dialog kosong
+
+        npcDialog = message; // Simpan dialog NPC
+        currentLine = 0; // Reset ke awal
+        onDialogueEnd = callback; // Simpan callback
+        DialogSystem.SetActive(true); // Munculkan panel dialog
+        ShowNextLine(); // Tampilkan baris pertama
     }
 
     // Menampilkan baris berikutnya
-    public void ShowNextLine(){
-        if (currentLine < npcDialog.Length){
-            text.text = npcDialog[currentLine];
-            currentLine++;
+    public void ShowNextLine()
+    {
+        if (currentLine < npcDialog.Length)
+        {
+            text.text = npcDialog[currentLine]; // Tampilkan teks dialog
+            currentLine++; // Pindah ke baris berikutnya
         }
-        else{
-            // Jika sudah selesai, sembunyikan dialog
-            DialogSystem.SetActive(false);
-            currentLine = 0; // Mengatur ulang ke awal untuk dialog berikutnya
+        else
+        {
+            DialogSystem.SetActive(false); // Tutup dialog
+            currentLine = 0; // Reset untuk dialog berikutnya
+            onDialogueEnd?.Invoke(); // 🔥 Panggil callback setelah dialog selesai
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
-        // Menunggu input untuk melewati dialog
-        if (Input.GetKeyDown(KeyCode.Space)) // Misal tekan spasi untuk melanjutkan
+        if (DialogSystem.activeSelf && Input.GetKeyDown(KeyCode.Space)) // Tekan Spasi untuk lanjut
         {
             ShowNextLine();
         }

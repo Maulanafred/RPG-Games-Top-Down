@@ -26,6 +26,8 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (!charController.enabled) return;
+
         Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
         Vector3 motion = input.normalized;
         motion *= (Mathf.Abs(input.x) == 1 && Mathf.Abs(input.z) == 1) ? 0.7f : 1f;
